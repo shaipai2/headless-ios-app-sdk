@@ -1,0 +1,14 @@
+{
+    "custom_data": {
+        "user_name": {
+            "label": "Name",
+            "value": "John"
+        },
+        "user_age": {
+            "label": "Age",
+            "value": 30,
+            "type": "number",
+            "invisible_to_agent": true
+        }
+    }
+}
