@@ -15,7 +15,8 @@
 -  **In ChatDelegate.swift file** 
    -  The class has a function which will get the external Form url which the App will use to display the Form
    -  Update the value of **"serverURL"** in ***handleWebFormRequest()*** function. This is the url to your own Forms service which will respond back with Form url.
-
+-  **In CCaaSChatView.swift file** 
+   -  update the **"meuId"** parameter when calling the *messagesManager.startChat*. This id shoud be the id of the queue which is configured in CCaaS
 ## 3. Make the following changes to the local server configuration
 - The local server will generate the JWT token which will be used to authenticate and connect to the CCaaS intance
 - cd into the server folder

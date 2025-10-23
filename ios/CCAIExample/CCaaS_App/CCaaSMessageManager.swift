@@ -45,7 +45,6 @@ class CCaaSMessageManager: ObservableObject{
     init () {
         print("App_Log: in init")
         pushNotificationService = CCAI.shared.serviceLocator?.get(of: PushNotificationServiceProtocol.self)
-        let screenShareService = CCAI.shared.serviceLocator?.get(of: ScreenShareServiceProtocol.self)
         service = CCAI.shared.chatService!
         setupSubscriptions(with: self.service!)
     }
