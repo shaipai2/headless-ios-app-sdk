@@ -480,15 +480,15 @@ class CCaaSMessageManager: ObservableObject{
             handleError(error, message: "Failed to end chat", shouldUpdateState: true)
         }
     }
-    
+
     // Resetting of variables
     private func cleanupChat() {
         print("App_Log: in cleanupChat()")
         isTyping = false
         waitingForAgent = true
         messages=[]
+        participants=[:]
         showChatIcon=true
-        
    }
     
     func handleError(_ error: Error, message: String, shouldUpdateState: Bool = false) {
