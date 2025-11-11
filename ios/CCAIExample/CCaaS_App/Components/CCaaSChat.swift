@@ -18,7 +18,7 @@ struct CCaaSChat: View {
                 VStack{
                     Text("Tap Here to Chat")
                         .font(.headline)
-                    Image("download")
+                    Image("chat_icon")
                         .cornerRadius(800)
                 }.frame(width: 300, height: 300, alignment: .center)
                     .padding(.horizontal)

@@ -58,7 +58,7 @@ struct CCaaSChatView: View {
                         .background(Color.white)
                     }
                 }
-                CCaaSMessageField(messagesManager: messagesManager, ).environmentObject(messagesManager)
+                CCaaSMessageMediaField(messagesManager: messagesManager)
             }
             .alert("Would you like to continue chatting?", isPresented: $messagesManager.dimissedState){
                 Button("Continue Chat ?") {
@@ -66,12 +66,14 @@ struct CCaaSChatView: View {
                     print("Continuing with the action...")
                     messagesManager.dimissedState = false
                     Task {
-                        await messagesManager.resumChat()
+                        await messagesManager.rejoinChat()
                     }
                 }
-                Button("Cancel", role: .cancel) {
-                    // Dismiss the alert, no specific action needed
-                    print("Action cancelled.")
+                Button("End-Chat", role: .cancel) {
+                    // End the chat
+                    Task {
+                        await messagesManager.endChat()
+                    }
                 }
             }
         }

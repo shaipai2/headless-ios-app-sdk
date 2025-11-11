@@ -64,13 +64,20 @@ class CCaaSMessageManager: ObservableObject{
         }
     }
     
-    // Initiate the chat by passing custom data containing external chat transcripts and un-signed meta-data and signed meta-data
     func startChat(menuId: Int) async {
+        //Check if there is an active ongoing chat
+        let lastChatResponse = await checkIfLastChatActive()
         do {
-            waitingForAgent = true
-            //Array of ExternalChatTranscript objects
-            var externalChatTranscripts : [ExternalChatTranscript] = []
-            var jsonString = """
+            if (lastChatResponse != nil) {
+                print("App_Log: resuming chat")
+                try await service!.resumeChat(lastChatResponse!)
+            }
+            else{
+                // Initiate the chat by passing custom data containing external chat transcripts and un-signed meta-data and signed meta-data
+                waitingForAgent = true
+                //Array of ExternalChatTranscript objects
+                var externalChatTranscripts : [ExternalChatTranscript] = []
+                var jsonString = """
                 {
                     "sender":"end_user",
                     "timestamp":"2025-10-02T22:24:37Z",
@@ -82,9 +89,9 @@ class CCaaSMessageManager: ObservableObject{
                     ]
                 }
             """
-            var externalChatTranscript:ExternalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
-            externalChatTranscripts.append(externalChatTranscript)
-            jsonString = """
+                var externalChatTranscript:ExternalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
+                externalChatTranscripts.append(externalChatTranscript)
+                jsonString = """
                 {
                     "sender":"agent",
                     "timestamp":"2025-10-02T22:25:37Z",
@@ -96,10 +103,10 @@ class CCaaSMessageManager: ObservableObject{
                     ]
                 }
             """
-            
-            externalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
-            externalChatTranscripts.append(externalChatTranscript)
-            jsonString = """
+                
+                externalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
+                externalChatTranscripts.append(externalChatTranscript)
+                jsonString = """
                 {
                     "sender":"end_user",
                     "timestamp":"2025-10-02T22:26:37Z",
@@ -115,32 +122,46 @@ class CCaaSMessageManager: ObservableObject{
                     ]
                 }
             """
-            externalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
-            externalChatTranscripts.append(externalChatTranscript)
-
-            var payload = CustomDataPayload()
-            let transfer = ExternalChatTransfer(
-                agent: ExternalChatAgent(name: "John Smith", avatar:nil),
-                transcript: externalChatTranscripts
-            )
-            payload.externalChatTransfer = transfer
-            
-            // Adding meta-data to customData
-            payload["app_version"] = CustomDataItem(label: "App Version", value: "3.1.0", type: .string, invisibleToAgent: true)
-            payload["app_type"] = CustomDataItem(label: "App Type", value: "iOS", type: .string, invisibleToAgent: false)
-            
-            // Get signed custom data in a form JWTToken
-            let jwtToken = await requestJWTForEndUser()
-            let customData = CustomData(signed: jwtToken, unsigned:payload)
-            
-            //Create the request
-            let request = ChatRequest(menuId: menuId,customData: customData)
-            
-            //Start the chat
-            try await service!.start(request: request)
+                externalChatTranscript=decodeJSON(ext_chat_transcript: jsonString)!
+                externalChatTranscripts.append(externalChatTranscript)
+                
+                var payload = CustomDataPayload()
+                let transfer = ExternalChatTransfer(
+                    agent: ExternalChatAgent(name: "John Smith", avatar:nil),
+                    transcript: externalChatTranscripts
+                )
+                payload.externalChatTransfer = transfer
+                
+                // Adding meta-data to customData
+                payload["app_version"] = CustomDataItem(label: "App Version", value: "3.1.0", type: .string, invisibleToAgent: true)
+                payload["app_type"] = CustomDataItem(label: "App Type", value: "iOS", type: .string, invisibleToAgent: false)
+                
+                // Get signed custom data in a form JWTToken
+                let jwtToken = await requestJWTForEndUser()
+                let customData = CustomData(signed: jwtToken, unsigned:payload)
+                
+                //Create the request
+                let request = ChatRequest(menuId: menuId,customData: customData)
+                
+                //Start the chat
+                try await service!.start(request: request)
+            }
         } catch {
             handleError(error, message: "Failed to start chat", shouldUpdateState: true)
         }
+    }
+    
+    //Check if there is an active chat
+    private func checkIfLastChatActive() async -> ChatResponse?  {
+        do{
+            let lastChatResponse = try await service!.getLastChatInProgress()
+            print("App_Log: \(String(describing: lastChatResponse))")
+            return lastChatResponse
+            
+        }catch{
+            print("An error occurred: \(error)")
+        }
+        return nil
     }
     
     // MARK: - Private Methods
@@ -495,14 +516,12 @@ class CCaaSMessageManager: ObservableObject{
         }
     }
     
-    // Use resumeChat when the user bring the app from background to foreground.
-    func resumChat() async{
+
+    // Use enqueueCurrentChat if the chat goes into dismissal state and the customer wants to rejoin the chat
+    func rejoinChat() async{
         do{
-            print("App_Log: resuming chat")
-            let lastChatInProgress = try await service!.getLastChatInProgress()
-            print("App_Log: last chat in progress \(lastChatInProgress!)")
-            let resumeResponse = try await service!.resumeChat(lastChatInProgress!)
-            print("App_Log: resume response \(resumeResponse)")
+            print("shaipai enqueue chat")
+            try await service!.enqueueCurrentChat()
         }catch {
             handleError(error, message: "Failed to end chat", shouldUpdateState: true)
         }
@@ -526,7 +545,8 @@ class CCaaSMessageManager: ObservableObject{
         
         print("App_Log: all APNS subscription set")
     }
-
+    
+    // This Subject receives the Push Notifications which then can be used handle the app behavior
     private func setupChatNotificationReceivedSubscription(_ service: PushNotificationServiceProtocol) {
         print("App_Log: setupChatNotificationReceivedSubscription")
         service.chatNotificationReceivedSubject

@@ -29,8 +29,18 @@ struct CCaaSMessageBubble: View {
                             formTapped=false
                         }
                     
-                }else{
-//                    if var foundObject = messagesManager.formDetailsList.first(where: { $0.id == message.id }) {
+                }
+                else if(message.attachments.isEmpty == false){
+                    AsyncImage(url: message.attachments[0].full) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } placeholder: {
+                        ProgressView() // Show a loading indicator while the image loads
+                    }
+                    .frame(width: 200, height: 200)
+                }
+                else{
                     if var currentFormDetails = messagesManager.currentFormDetails{
                         AsyncImage(url: URL(string: currentFormDetails.formImageUrl)){phase in
                                 switch phase {
