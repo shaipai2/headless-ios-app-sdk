@@ -520,7 +520,7 @@ class CCaaSMessageManager: ObservableObject{
     // Use enqueueCurrentChat if the chat goes into dismissal state and the customer wants to rejoin the chat
     func rejoinChat() async{
         do{
-            print("shaipai enqueue chat")
+            print("App_Log: enqueue chat")
             try await service!.enqueueCurrentChat()
         }catch {
             handleError(error, message: "Failed to end chat", shouldUpdateState: true)
