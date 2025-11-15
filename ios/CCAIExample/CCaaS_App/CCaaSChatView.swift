@@ -61,7 +61,6 @@ struct CCaaSChatView: View {
                         }
                     }
                 }
-                CCaaSMessageMediaField(messagesManager: messagesManager)
             }
             .alert("Would you like to continue chatting?", isPresented: $messagesManager.dimissedState){
                 Button("Continue Chat ?") {
