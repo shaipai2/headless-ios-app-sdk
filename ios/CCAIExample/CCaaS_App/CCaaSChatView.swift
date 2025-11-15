@@ -7,6 +7,8 @@
 
 import SwiftUI
 import CCAIChat
+// Third-Party lib for display and sending for chat messages
+import ExyteChat
 
 //Main View
 struct CCaaSChatView: View {
@@ -48,14 +50,15 @@ struct CCaaSChatView: View {
                     CCaaSTitleRow(messagesManager: messagesManager,showingConfirmationDialog: $showingConfirmationDialog,
                     showChatIcon: $showChatIcon)
                         .background(Color.indigo.opacity(0.2))
-                    ScrollViewReader {proxy in
-                        ScrollView{
-                            ForEach(messagesManager.messages,id:\.id){message in
-                                CCaaSMessageBubble(message: message ,messagesManager: messagesManager,formTapped:$formTapped)
-                            }
+                    // ChatView is a Third-Party lib
+                    ChatView(messages: messagesManager.messages) { draft in
+                        Task{
+                            await messagesManager.sendMessage(message: draft)
                         }
-                        .padding(.top,50)
-                        .background(Color.white)
+                    } messageBuilder: { message, positionInUserGroup, positionInMessagesSection, positionInCommentsGroup, showContextMenuClosure, messageActionClosure, showAttachmentClosure in
+                        VStack {
+                            CCaaSMessageBubble(message: message ,messagesManager: messagesManager,formTapped:$formTapped)
+                        }
                     }
                 }
                 CCaaSMessageMediaField(messagesManager: messagesManager)
